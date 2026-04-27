@@ -10,7 +10,7 @@
 |---|---|---|
 | **Vector DB** | Milvus (standalone) | Semantic memory — stores chunk embeddings |
 | **Embeddings** | Cohere `embed-english-v3.0` | Converts text → 1024-dim vectors |
-| **LLM** | Gemini 1.5 Flash | Generates grounded answers from retrieved context |
+| **LLM** | Groq LLM (configurable) | Generates grounded answers from retrieved context |
 | **Sync Engine** | Python + GitHub Actions | Keeps Milvus in perfect sync with `knowledge/` |
 | **API** | FastAPI | `/health` + `/query` endpoints |
 | **UI** | React + Vite | Chat interface with citations and source filters |
@@ -41,7 +41,7 @@ sync.py  (Sync Engine)
     ├── embed question (Cohere)
     ├── vector search (Milvus HNSW)
     ├── assemble context
-    └── Gemini answer + citations
+      └── Groq LLM answer + citations
           │
           ▼
     React UI (chat + citations)
@@ -56,7 +56,7 @@ sync.py  (Sync Engine)
 - Docker & Docker Compose
 - Python 3.11+
 - Node 18+
-- API keys: [Cohere](https://cohere.com) + [Google AI Studio](https://aistudio.google.com)
+API keys: [Cohere](https://cohere.com) + [Groq](https://www.groq.ai)
 
 ---
 
@@ -80,7 +80,7 @@ docker compose ps   # all services should show "healthy"
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env and fill in your COHERE_API_KEY and GOOGLE_API_KEY
+# Edit .env and fill in your COHERE_API_KEY and GROQ_API_KEY
 ```
 
 Install dependencies:
@@ -151,7 +151,7 @@ Add these **Repository Secrets** (Settings → Secrets → Actions):
 | `MILVUS_PORT` | Default: `19530` |
 | `MILVUS_COLLECTION` | Default: `synced_brain_chunks` |
 | `COHERE_API_KEY` | Your Cohere API key |
-| `GOOGLE_API_KEY` | Your Google AI API key |
+| `GROQ_API_KEY` | Your Groq API key |
 
 > **Note:** GitHub-hosted runners cannot reach `localhost`. Use a hosted Milvus (e.g., [Zilliz Cloud](https://zilliz.com/cloud) free tier) or configure a self-hosted runner that can reach your Milvus.
 
@@ -247,7 +247,7 @@ The sync engine (`sync.py`) handles three operations to prevent "vector drift":
 | `MILVUS_COLLECTION` | `synced_brain_chunks` | Collection name |
 | `KNOWLEDGE_DIR` | `knowledge` | Path to knowledge folder |
 | `COHERE_API_KEY` | — | Cohere API key |
-| `GOOGLE_API_KEY` | — | Gemini API key |
+| `GROQ_API_KEY` | — | Groq API key |
 | `ALLOW_ORIGINS` | `*` | CORS allowed origins |
 
 **Frontend:**
@@ -274,7 +274,7 @@ pytest backend/app/tests/test_sync_and_query.py -v
 
 - [x] Milvus vector store integration (`milvus_store.py`)
 - [x] Sync engine with add/modify/delete reconciliation (`sync.py`)
-- [x] New `/query` endpoint with Milvus retrieval + Gemini answer + citations
+- [x] New `/query` endpoint with Milvus retrieval + Groq answer + citations
 - [x] Frontend updated — query input, chat, citation cards, source filters
 - [x] `knowledge/` folder with seeding README
 - [x] Docker Compose for Milvus local dev

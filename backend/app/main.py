@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Optional
 
 import cohere
-from google import genai
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -32,10 +31,9 @@ from groq import Groq
 # ---------------------------------------------------------------------------
 load_dotenv()
 COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-
 # immediate prototyping
 GROQ_API_KEY = os.getenv("GROQ_API_KEY","")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*").split(",")
 EMBED_MODEL = "embed-english-v3.0"

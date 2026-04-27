@@ -9,7 +9,7 @@ cohere>=5.0.0
 
 # LLM
 # google-generativeai>=0.7.0  this has been depreceated.
-google-genai
+groq
 # grok                        this is for immediate prototyping
 
 # Vector DB

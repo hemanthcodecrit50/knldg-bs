@@ -85,11 +85,56 @@ services:
     environment:
       MILVUS_URL: milvus:19530
     ports:
-      - "8080:3000"     # Open http://localhost:8080 to browse Milvus
+      - "8081:3000"     # Open http://localhost:8081 to browse Milvus (changed to avoid host port conflict)
     depends_on:
       - milvus
+
+  # ── Backend — FastAPI app for local dev ──────────────────────────────────
+  backend:
+    image: python:3.11-slim
+    container_name: queryfile-backend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./backend:/app:delegated
+    ports:
+      - "8000:8000"
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      - milvus
+
+  # ── Frontend — Vite dev server for local dev ─────────────────────────────
+  frontend:
+    image: node:18
+    container_name: queryfile-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app:delegated
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
+
+  # ── Jenkins — local CI that can control Docker via socket ───────────────
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    user: root
 
 volumes:
   etcd_data:
   minio_data:
   milvus_data:
+  jenkins_home:

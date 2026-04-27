@@ -13,8 +13,14 @@ from pymilvus import (
     utility,
 )
 
-MILVUS_HOST = os.getenv("MILVUS_HOST", "localhost")
-MILVUS_PORT = int(os.getenv("MILVUS_PORT", "19530"))
+MILVUS_URI = os.getenv("MILVUS_URI")  # format: host:port (e.g. milvus-standalone:19530)
+if MILVUS_URI:
+    parts = MILVUS_URI.split(":")
+    MILVUS_HOST = parts[0]
+    MILVUS_PORT = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 19530
+else:
+    MILVUS_HOST = os.getenv("MILVUS_HOST", "localhost")
+    MILVUS_PORT = int(os.getenv("MILVUS_PORT", "19530"))
 COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "synced_brain_chunks")
 VECTOR_DIM = int(os.getenv("VECTOR_DIM", "1024"))  # Cohere embed-english-v3.0 = 1024
 
