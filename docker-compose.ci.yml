@@ -1,0 +1,21 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: queryfile-backend-ci
+    volumes: []
+    working_dir: /app
+    environment:
+      PYTHONPATH: /app
+      KNOWLEDGE_DIR: /app/knowledge
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: queryfile-frontend-ci
+    volumes: []
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0
