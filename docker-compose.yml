@@ -94,12 +94,15 @@ services:
     image: python:3.11-slim
     container_name: queryfile-backend
     restart: unless-stopped
-    working_dir: /app
+    working_dir: /workspace
     volumes:
-      - ./backend:/app:delegated
+      - ./:/workspace:delegated
+    environment:
+      PYTHONPATH: /workspace
+      KNOWLEDGE_DIR: /workspace/knowledge
     ports:
       - "8000:8000"
-    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "pip install -r backend/requirements.txt && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"
     depends_on:
       - milvus
 
