@@ -7,7 +7,8 @@ pipeline {
 
   environment {
     DOCKER_HOST = "unix:///var/run/docker.sock"
-    COMPOSE_FILE = "/workspace/docker-compose.yml:/workspace/docker-compose.ci.yml"
+    COMPOSE_FILE = "/workspace/docker-compose.yml"
+    COMPOSE_CI_FILE = "/workspace/docker-compose.ci.yml"
     COMPOSE_PROJECT_NAME = "queryfile"
     COMPOSE_SERVICES = "milvus etcd minio attu backend frontend"
   }
@@ -22,7 +23,7 @@ pipeline {
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" up -d --build $COMPOSE_SERVICES
+          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" up -d --build $COMPOSE_SERVICES
         '''
       }
     }
@@ -38,7 +39,7 @@ pipeline {
           fi
 
           for i in $(seq 1 30); do
-            $COMPOSE -f "$COMPOSE_FILE" exec -T backend python - <<'PY' && exit 0
+            $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python - <<'PY' && exit 0
 import json, sys, urllib.request
 try:
     with urllib.request.urlopen("http://localhost:8000/health", timeout=2) as r:
@@ -66,7 +67,7 @@ PY
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" exec -T backend python -m backend.app.sync.sync
+          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python -m backend.app.sync.sync
         '''
       }
     }
@@ -81,7 +82,7 @@ PY
             COMPOSE="docker-compose"
           fi
 
-          $COMPOSE -f "$COMPOSE_FILE" exec -T backend python - <<'PY'
+          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python - <<'PY'
 import json, sys, urllib.request
 
 payload = {"question": "What is the Synced Brain and how does it sync files?", "top_k": 3, "debug": True}
@@ -117,7 +118,7 @@ PY
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" up -d --build backend frontend
+          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" up -d --build backend frontend
         '''
       }
     }
@@ -131,8 +132,8 @@ PY
         else
           COMPOSE="docker-compose"
         fi
-        $COMPOSE -f "$COMPOSE_FILE" ps || true
-        $COMPOSE -f "$COMPOSE_FILE" logs --tail 200 backend || true
+        $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" ps || true
+        $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" logs --tail 200 backend || true
       '''
     }
   }
