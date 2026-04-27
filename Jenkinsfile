@@ -1,19 +1,15 @@
 pipeline {
   agent any
 
+  options {
+    skipDefaultCheckout(true)
+  }
+
   environment {
     DOCKER_HOST = "unix:///var/run/docker.sock"
   }
 
   stages {
-    stage('Checkout') {
-      steps {
-        dir('/workspace') {
-          checkout scm
-        }
-      }
-    }
-
     stage('Build') {
       steps {
         sh 'docker build -t queryfile-backend -f /workspace/backend/Dockerfile /workspace/backend || true'
