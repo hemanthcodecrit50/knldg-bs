@@ -97,8 +97,6 @@ services:
     working_dir: /app
     volumes:
       - ./backend:/app:delegated
-    environment:
-      PYTHONPATH: /app
     ports:
       - "8000:8000"
     command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
@@ -121,7 +119,9 @@ services:
 
   # ── Jenkins — local CI that can control Docker via socket ───────────────
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: jenkins/Dockerfile
     container_name: jenkins
     restart: unless-stopped
     ports:
