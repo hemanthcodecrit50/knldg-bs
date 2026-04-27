@@ -9,6 +9,7 @@ pipeline {
     DOCKER_HOST = "unix:///var/run/docker.sock"
     COMPOSE_FILE = "/workspace/docker-compose.yml"
     COMPOSE_PROJECT_NAME = "queryfile"
+    COMPOSE_SERVICES = "milvus etcd minio attu backend frontend"
   }
 
   stages {
@@ -21,7 +22,7 @@ pipeline {
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" up -d --build
+          $COMPOSE -f "$COMPOSE_FILE" up -d --build $COMPOSE_SERVICES
         '''
       }
     }
