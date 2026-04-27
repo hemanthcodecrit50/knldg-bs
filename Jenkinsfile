@@ -8,20 +8,22 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        checkout scm
+        dir('/workspace') {
+          checkout scm
+        }
       }
     }
 
     stage('Build') {
       steps {
-        sh 'docker build -t queryfile-backend -f backend/Dockerfile backend || true'
-        sh 'docker build -t queryfile-frontend -f frontend/Dockerfile frontend || true'
+        sh 'docker build -t queryfile-backend -f /workspace/backend/Dockerfile /workspace/backend || true'
+        sh 'docker build -t queryfile-frontend -f /workspace/frontend/Dockerfile /workspace/frontend || true'
       }
     }
 
     stage('Test') {
       steps {
-        sh 'BACKEND_URL=http://backend:8000 bash ./scripts/smoke_test.sh'
+        sh 'BACKEND_URL=http://backend:8000 bash /workspace/scripts/smoke_test.sh'
       }
     }
 
@@ -33,7 +35,7 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        sh 'docker-compose up -d --build'
+        sh 'docker compose -f /workspace/docker-compose.yml up -d --build'
       }
     }
   }
@@ -41,6 +43,7 @@ pipeline {
   post {
     always {
       sh 'docker ps || true'
+      sh 'docker logs --tail 200 queryfile-backend || true'
     }
   }
 }
