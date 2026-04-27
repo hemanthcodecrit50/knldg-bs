@@ -10,28 +10,28 @@ pipeline {
   }
 
   stages {
-    stage('Build') {
+    stage('Up') {
       steps {
-        sh 'docker build -t queryfile-backend -f /workspace/backend/Dockerfile /workspace/backend || true'
-        sh 'docker build -t queryfile-frontend -f /workspace/frontend/Dockerfile /workspace/frontend || true'
+        sh 'docker compose -f /workspace/docker-compose.yml up -d --build'
       }
     }
 
     stage('Test') {
       steps {
+        sh 'for i in $(seq 1 20); do curl -sf http://backend:8000/health && break; sleep 3; done'
         sh 'BACKEND_URL=http://backend:8000 bash /workspace/scripts/smoke_test.sh'
       }
     }
 
     stage('Sync') {
       steps {
-        sh 'python3 backend/app/sync/sync.py'
+        sh 'docker compose -f /workspace/docker-compose.yml exec -T backend python -m backend.app.sync.sync'
       }
     }
 
     stage('Deploy') {
       steps {
-        sh 'docker compose -f /workspace/docker-compose.yml up -d --build'
+        sh 'docker compose -f /workspace/docker-compose.yml up -d --build --wait'
       }
     }
   }
