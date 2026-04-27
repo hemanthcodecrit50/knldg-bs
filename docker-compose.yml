@@ -98,9 +98,6 @@ services:
     container_name: queryfile-backend
     restart: unless-stopped
     working_dir: /app
-    volumes:
-      - ./backend:/app/backend:delegated
-      - ./knowledge:/app/knowledge:delegated
     environment:
       PYTHONPATH: /app
       KNOWLEDGE_DIR: /app/knowledge
@@ -114,15 +111,16 @@ services:
 
   # ── Frontend — Vite dev server for local dev ─────────────────────────────
   frontend:
-    image: node:18
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: queryfile-frontend
     container_name: queryfile-frontend
     restart: unless-stopped
     working_dir: /app
-    volumes:
-      - ./frontend:/app:delegated
     ports:
       - "5173:5173"
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
 
