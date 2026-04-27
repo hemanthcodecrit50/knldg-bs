@@ -21,7 +21,7 @@ pipeline {
 
     stage('Test') {
       steps {
-        sh './scripts/smoke_test.sh'
+        sh 'BACKEND_URL=http://backend:8000 bash ./scripts/smoke_test.sh'
       }
     }
 
