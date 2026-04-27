@@ -9,6 +9,8 @@ services:
     environment:
       PYTHONPATH: /app
       KNOWLEDGE_DIR: /app/knowledge
+      MILVUS_HOST: milvus
+      MILVUS_PORT: "19530"
     ports: []
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 
