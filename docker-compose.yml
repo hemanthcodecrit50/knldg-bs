@@ -91,18 +91,24 @@ services:
 
   # ── Backend — FastAPI app for local dev ──────────────────────────────────
   backend:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: queryfile-backend
     container_name: queryfile-backend
     restart: unless-stopped
-    working_dir: /workspace
+    working_dir: /app
     volumes:
-      - ./:/workspace:delegated
+      - ./backend:/app/backend:delegated
+      - ./knowledge:/app/knowledge:delegated
     environment:
-      PYTHONPATH: /workspace
-      KNOWLEDGE_DIR: /workspace/knowledge
+      PYTHONPATH: /app
+      KNOWLEDGE_DIR: /app/knowledge
+      MILVUS_HOST: milvus
+      MILVUS_PORT: "19530"
     ports:
       - "8000:8000"
-    command: sh -c "pip install -r backend/requirements.txt && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000"
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - milvus
 
