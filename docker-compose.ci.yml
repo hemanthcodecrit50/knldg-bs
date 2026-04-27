@@ -9,6 +9,7 @@ services:
     environment:
       PYTHONPATH: /app
       KNOWLEDGE_DIR: /app/knowledge
+    ports: []
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 
   frontend:
@@ -18,4 +19,5 @@ services:
     image: queryfile-frontend-ci
     volumes: []
     working_dir: /app
+    ports: []
     command: npm run dev -- --host 0.0.0.0
