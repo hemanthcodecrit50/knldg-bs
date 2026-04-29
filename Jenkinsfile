@@ -8,12 +8,36 @@ pipeline {
   environment {
     DOCKER_HOST = "unix:///var/run/docker.sock"
     COMPOSE_FILE = "/workspace/docker-compose.yml"
-    COMPOSE_CI_FILE = "/workspace/docker-compose.ci.yml"
     COMPOSE_PROJECT_NAME = "queryfile"
-    COMPOSE_SERVICES = "milvus etcd minio attu backend frontend"
   }
 
   stages {
+    stage('Prepare Env') {
+      steps {
+        sh '''
+          set -e
+          if [ ! -f ".env" ]; then
+            echo ".env is missing. Provide one or configure Jenkins credentials." >&2
+            exit 1
+          fi
+        '''
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh '''
+          set -e
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE="docker compose"
+          else
+            COMPOSE="docker-compose"
+          fi
+          $COMPOSE -f "$COMPOSE_FILE" build
+        '''
+      }
+    }
+
     stage('Up') {
       steps {
         sh '''
@@ -23,7 +47,17 @@ pipeline {
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" up -d --build $COMPOSE_SERVICES
+          $COMPOSE -f "$COMPOSE_FILE" up -d
+          if $COMPOSE -f "$COMPOSE_FILE" ps --status=exited --quiet | grep -q .; then
+            echo "One or more containers exited" >&2
+            $COMPOSE -f "$COMPOSE_FILE" ps
+            exit 1
+          fi
+          if $COMPOSE -f "$COMPOSE_FILE" ps --status=dead --quiet | grep -q .; then
+            echo "One or more containers are dead" >&2
+            $COMPOSE -f "$COMPOSE_FILE" ps
+            exit 1
+          fi
         '''
       }
     }
@@ -39,7 +73,7 @@ pipeline {
           fi
 
           for i in $(seq 1 30); do
-            $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python - <<'PY' && exit 0
+            $COMPOSE -f "$COMPOSE_FILE" exec -T backend python - <<'PY' && exit 0
 import json, sys, urllib.request
 try:
     with urllib.request.urlopen("http://localhost:8000/health", timeout=2) as r:
@@ -67,7 +101,7 @@ PY
           else
             COMPOSE="docker-compose"
           fi
-          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python -m backend.app.sync.sync
+          $COMPOSE -f "$COMPOSE_FILE" exec -T backend python -m backend.app.sync.sync
         '''
       }
     }
@@ -82,7 +116,7 @@ PY
             COMPOSE="docker-compose"
           fi
 
-          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" exec -T backend python - <<'PY'
+          $COMPOSE -f "$COMPOSE_FILE" exec -T backend python - <<'PY'
 import json, sys, urllib.request
 
 payload = {"question": "What is the Synced Brain and how does it sync files?", "top_k": 3, "debug": True}
@@ -108,20 +142,6 @@ PY
         '''
       }
     }
-
-    stage('Deploy') {
-      steps {
-        sh '''
-          set -e
-          if docker compose version >/dev/null 2>&1; then
-            COMPOSE="docker compose"
-          else
-            COMPOSE="docker-compose"
-          fi
-          $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" up -d --build backend frontend
-        '''
-      }
-    }
   }
 
   post {
@@ -132,8 +152,8 @@ PY
         else
           COMPOSE="docker-compose"
         fi
-        $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" ps || true
-        $COMPOSE -f "$COMPOSE_FILE" -f "$COMPOSE_CI_FILE" logs --tail 200 backend || true
+        $COMPOSE -f "$COMPOSE_FILE" ps || true
+        $COMPOSE -f "$COMPOSE_FILE" logs --tail 200 backend || true
       '''
     }
   }
