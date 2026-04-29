@@ -30,12 +30,11 @@ from groq import Groq
 # Configuration
 # ---------------------------------------------------------------------------
 load_dotenv()
-COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 # immediate prototyping
-GROQ_API_KEY = os.getenv("GROQ_API_KEY","")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*").split(",")
+ALLOW_ORIGINS = ["*"]
 EMBED_MODEL = "embed-english-v3.0"
 KNOWLEDGE_DIR = os.getenv("KNOWLEDGE_DIR", "knowledge")
 

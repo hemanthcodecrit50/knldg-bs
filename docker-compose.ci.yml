@@ -6,11 +6,10 @@ services:
     image: queryfile-backend-ci
     volumes: []
     working_dir: /app
+    env_file:
+      - .env
     environment:
       PYTHONPATH: /app
-      KNOWLEDGE_DIR: /app/knowledge
-      MILVUS_HOST: milvus
-      MILVUS_PORT: "19530"
     ports: []
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 
@@ -18,8 +17,9 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_BACKEND_URL: /api
     image: queryfile-frontend-ci
     volumes: []
     working_dir: /app
     ports: []
-    command: npm run dev -- --host 0.0.0.0

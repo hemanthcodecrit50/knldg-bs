@@ -1,95 +1,9 @@
 version: "3.8"
 
-# ─── Synced Brain — Local Dev Stack ───────────────────────────────────────────
-# Brings up: Milvus standalone (vector DB) + its dependencies + Attu (Milvus UI)
-#
-# Usage:
-#   docker compose up -d
-#   docker compose down        # stop (keeps data)
-#   docker compose down -v     # stop + wipe volumes
+# Production-lean Compose for EC2 deployment.
 
 services:
 
-  # ── etcd — Milvus metadata store ──────────────────────────────────────────
-  etcd:
-    image: quay.io/coreos/etcd:v3.5.14
-    container_name: milvus-etcd
-    restart: unless-stopped
-    environment:
-      ETCD_AUTO_COMPACTION_MODE: revision
-      ETCD_AUTO_COMPACTION_RETENTION: "1000"
-      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
-      ETCD_SNAPSHOT_COUNT: "50000"
-    volumes:
-      - etcd_data:/etcd
-    command: >
-      etcd
-      --advertise-client-urls=http://127.0.0.1:2379
-      --listen-client-urls=http://0.0.0.0:2379
-      --data-dir=/etcd
-    healthcheck:
-      test: ["CMD", "etcdctl", "endpoint", "health"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # ── MinIO — object storage for Milvus segments ────────────────────────────
-  minio:
-    image: minio/minio:RELEASE.2024-05-10T01-41-38Z
-    container_name: milvus-minio
-    restart: unless-stopped
-    environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-    volumes:
-      - minio_data:/minio_data
-    command: minio server /minio_data --console-address ":9001"
-    ports:
-      - "9001:9001"   # MinIO console (optional)
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-
-  # ── Milvus standalone ────────────────────────────────────────────────────
-  milvus:
-    image: milvusdb/milvus:v2.4.9
-    container_name: milvus-standalone
-    restart: unless-stopped
-    command: ["milvus", "run", "standalone"]
-    environment:
-      ETCD_ENDPOINTS: etcd:2379
-      MINIO_ADDRESS: minio:9000
-    volumes:
-      - milvus_data:/var/lib/milvus
-    ports:
-      - "19530:19530"   # gRPC (used by pymilvus)
-      - "9091:9091"     # Milvus REST / metrics
-    depends_on:
-      etcd:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
-      interval: 30s
-      timeout: 20s
-      retries: 5
-
-  # ── Attu — Milvus Web UI (optional but very handy for debugging) ──────────
-  attu:
-    image: zilliz/attu:v2.4.4
-    container_name: milvus-attu
-    restart: unless-stopped
-    environment:
-      MILVUS_URL: milvus:19530
-    ports:
-      - "8081:3000"     # Open http://localhost:8081 to browse Milvus (changed to avoid host port conflict)
-    depends_on:
-      - milvus
-
-  # ── Backend — FastAPI app for local dev ──────────────────────────────────
   backend:
     build:
       context: .
@@ -98,52 +12,24 @@ services:
     container_name: queryfile-backend
     restart: unless-stopped
     working_dir: /app
+    env_file:
+      - .env
     environment:
       PYTHONPATH: /app
-      KNOWLEDGE_DIR: /app/knowledge
-      MILVUS_HOST: milvus
-      MILVUS_PORT: "19530"
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-    depends_on:
-      - milvus
 
-  # ── Frontend — Vite dev server for local dev ─────────────────────────────
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_BACKEND_URL: /api
     image: queryfile-frontend
     container_name: queryfile-frontend
     restart: unless-stopped
-    working_dir: /app
-    ports:
-      - "5173:5173"
-    command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
-
-  # ── Jenkins — local CI that can control Docker via socket ───────────────
-  jenkins:
-    build:
-      context: .
-      dockerfile: jenkins/Dockerfile
-    container_name: jenkins
-    restart: unless-stopped
     ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/workspace
-    environment:
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
-    user: root
-
-volumes:
-  etcd_data:
-  minio_data:
-  milvus_data:
-  jenkins_home:
+      - "80:80"

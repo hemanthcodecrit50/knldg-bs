@@ -68,3 +68,12 @@ Thumbs.db
 .DS_Store
 
 .venv
+
+
+
+backend/.env
+backend/knowledge/
+jenkins/
+report.md
+new_plan.md
+settings.json
