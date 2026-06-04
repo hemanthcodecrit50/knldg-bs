@@ -13,23 +13,8 @@ from pymilvus import (
     utility,
 )
 
-MILVUS_URI = os.getenv("MILVUS_URI")  # format: host:port
-MILVUS_USER = os.getenv("MILVUS_USER")
-MILVUS_PASSWORD = os.getenv("MILVUS_PASSWORD")
-MILVUS_SECURE = os.getenv("MILVUS_SECURE", "false").lower() in {"1", "true", "yes"}
-MILVUS_SERVER_NAME = os.getenv("MILVUS_SERVER_NAME")
-
-MILVUS_HOST = None
-MILVUS_PORT = None
-if MILVUS_URI:
-    parts = MILVUS_URI.split(":")
-    MILVUS_HOST = parts[0] or os.getenv("MILVUS_HOST")
-    port_part = parts[1] if len(parts) > 1 and parts[1] else os.getenv("MILVUS_PORT")
-    MILVUS_PORT = int(port_part) if port_part and port_part.isdigit() else None
-else:
-    MILVUS_HOST = os.getenv("MILVUS_HOST")
-    port_env = os.getenv("MILVUS_PORT")
-    MILVUS_PORT = int(port_env) if port_env and port_env.isdigit() else None
+MILVUS_URI = os.getenv("MILVUS_URI") or os.getenv("ZILLIZ_URI")
+MILVUS_TOKEN = os.getenv("MILVUS_TOKEN") or os.getenv("ZILLIZ_TOKEN") or os.getenv("ZILLIZ_API_KEY")
 COLLECTION_NAME = os.getenv("MILVUS_COLLECTION", "synced_brain_chunks")
 VECTOR_DIM = int(os.getenv("VECTOR_DIM", "1024"))  # Cohere embed-english-v3.0 = 1024
 
@@ -39,18 +24,14 @@ VECTOR_DIM = int(os.getenv("VECTOR_DIM", "1024"))  # Cohere embed-english-v3.0 =
 # ---------------------------------------------------------------------------
 
 def connect() -> None:
-    """Open (or reuse) the default Milvus connection."""
-    if not MILVUS_HOST or not MILVUS_PORT:
-        raise ValueError("MILVUS_HOST and MILVUS_PORT must be set")
-    conn_kwargs = {"host": MILVUS_HOST, "port": MILVUS_PORT}
-    if MILVUS_USER:
-        conn_kwargs["user"] = MILVUS_USER
-    if MILVUS_PASSWORD:
-        conn_kwargs["password"] = MILVUS_PASSWORD
-    if MILVUS_SECURE:
-        conn_kwargs["secure"] = True
-    if MILVUS_SERVER_NAME:
-        conn_kwargs["server_name"] = MILVUS_SERVER_NAME
+    """Open (or reuse) the default Zilliz/Milvus cloud connection."""
+    if not MILVUS_URI:
+        raise ValueError("MILVUS_URI must be set")
+
+    conn_kwargs = {"uri": MILVUS_URI}
+    if MILVUS_TOKEN:
+        conn_kwargs["token"] = MILVUS_TOKEN
+
     connections.connect("default", **conn_kwargs)
 
 

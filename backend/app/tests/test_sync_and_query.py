@@ -1,12 +1,12 @@
 """
 test_sync_and_query.py — Integration smoke test.
 
-Requires a running Milvus instance and valid API keys in the environment.
+Requires an accessible Milvus-compatible vector database (for example, Zilliz Cloud) and valid API keys in the environment.
 
 Usage:
-    pytest backend/app/tests/test_sync_and_query.py -v
-  or
-    python backend/app/tests/test_sync_and_query.py
+        pytest backend/app/tests/test_sync_and_query.py -v
+    or
+        python backend/app/tests/test_sync_and_query.py
 """
 import os
 import sys

@@ -26,7 +26,10 @@ from dotenv import load_dotenv
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(_REPO_ROOT))
 
-import cohere  # noqa: E402
+try:
+    import cohere  # noqa: E402
+except Exception:  # pragma: no cover - optional runtime dependency
+    cohere = None
 
 from backend.app.ingestion.chunking import chunk_pages  # noqa: E402
 from backend.app.ingestion.parsers import parse_file  # noqa: E402
@@ -39,7 +42,7 @@ from backend.app.vectorstore.milvus_store import (  # noqa: E402
     upsert_chunks,
 )
 
-load_dotenv()
+load_dotenv(_REPO_ROOT / "backend" / ".env")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -71,6 +74,9 @@ def _discover_files(base_dir: str) -> list[str]:
 
 
 def _get_embeddings(texts: list[str]) -> list[list[float]]:
+    if cohere is None:
+        raise RuntimeError("cohere package is not installed")
+
     co = cohere.Client(COHERE_API_KEY)
     all_embs: list[list[float]] = []
     for i in range(0, len(texts), EMBED_BATCH):

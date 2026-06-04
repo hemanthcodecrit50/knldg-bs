@@ -1,0 +1,6 @@
+source .venv/bin/activate
+
+backend/.venv/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+
+
+cd /home/joyboy/Desktop/projects/NGDEVOPS_FINAL && backend/.venv/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
