@@ -14,8 +14,10 @@ jobs:
     timeout-minutes: 15
 
     env:
-      MILVUS_HOST:      ${{ secrets.MILVUS_HOST }}
-      MILVUS_PORT:      ${{ secrets.MILVUS_PORT || '19530' }}
+      # Prefer a cloud-hosted Milvus (Zilliz Cloud). Provide a full URI
+      # (e.g. https://...cloud.zilliz.com) and an API key as secrets.
+      MILVUS_URI:       ${{ secrets.MILVUS_URI }}
+      ZILLIZ_API_KEY:   ${{ secrets.ZILLIZ_API_KEY }}
       MILVUS_COLLECTION: ${{ secrets.MILVUS_COLLECTION || 'synced_brain_chunks' }}
       COHERE_API_KEY:   ${{ secrets.COHERE_API_KEY }}
       GROQ_API_KEY:     ${{ secrets.GROQ_API_KEY }}

@@ -4,43 +4,37 @@
 This document explains the setup steps your teammates should follow when they pull the dev branch, common issues they may encounter, and what the current project can do in terms of next-gen data storage and DevOps lifecycle.
 
 ## Setup (Local Dev)
-Single command local run:
-- docker compose up -d
-
-This starts Milvus, backend, frontend, and Jenkins together. Only use the CI override file when running Jenkins pipelines.
+This repository now runs locally with the existing backend virtualenv and the Vite dev server.
 
 1. Prerequisites
-   - Docker and Docker Compose
-   - Python 3.11+
+   - Python 3.10+
    - Node 18+
-   - API keys: Cohere and Groq
+   - API keys for Cohere and Groq
+   - A cloud Milvus/Zilliz endpoint in `backend/.env`
 
-2. Clone and enter the repo
-   - git clone git@github.com:hemanthcodecrit50/knldg-bs.git
-   - cd knldg-bs
-   - git checkout dev
+2. Backend environment
+   - `cd /home/joyboy/Desktop/projects/NGDEVOPS_FINAL/backend`
+   - `cp .env.example .env`
+   - Fill in `COHERE_API_KEY`, `GROQ_API_KEY`, `MILVUS_URI`, and `ZILLIZ_API_KEY` or `MILVUS_TOKEN`
 
-3. Start services
-    - docker compose up -d
-    - docker compose ps
-       - wait until etcd, minio, and milvus are healthy
+3. Start the backend
+   - `cd /home/joyboy/Desktop/projects/NGDEVOPS_FINAL`
+   - `backend/.venv/bin/python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000`
+   - Health check: `curl http://127.0.0.1:8000/health`
 
-4. Configure backend environment
-   - cd backend
-   - cp .env.example .env
-   - Update COHERE_API_KEY and GROQ_API_KEY
+4. Start the frontend
+   - `cd /home/joyboy/Desktop/projects/NGDEVOPS_FINAL/frontend`
+   - `npm install` if dependencies are missing
+   - `npm run dev`
+   - Open `http://localhost:5173`
 
-5. Backend runtime
-    - The backend runs from a virtualenv inside the container image
-    - Verify:
-       - curl http://localhost:8000/health
+5. Optional sync
+   - `cd /home/joyboy/Desktop/projects/NGDEVOPS_FINAL/backend`
+   - `../backend/.venv/bin/python -m backend.app.sync.sync`
 
-6. Frontend access
-   - Open http://localhost:5173
-   - If it does not load, ensure you are not using docker-compose.ci.yml for local dev
-
-7. Optional: initial sync of knowledge files
-   - python -m backend.app.sync.sync
+6. Notes
+   - The backend uses `backend/data/chat_history.sqlite3` for chat history unless `CHAT_DB_PATH` is set.
+   - Frontend API calls are proxied from `/api` to `http://127.0.0.1:8000` in `frontend/vite.config.ts`.
 
 ## Setup (Jenkins Pipeline on Docker)
 This branch includes a Jenkinsfile that runs the stack using Docker Compose with a CI override file.

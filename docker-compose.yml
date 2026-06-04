@@ -1,35 +1,25 @@
-version: "3.8"
-
-# Production-lean Compose for EC2 deployment.
-
 services:
-
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    image: queryfile-backend
-    container_name: queryfile-backend
-    restart: unless-stopped
-    working_dir: /app
+
+    container_name: ngdevops-backend
+
     env_file:
-      - .env
-    environment:
-      PYTHONPATH: /app
-    expose:
-      - "8000"
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+      - backend/.env
+
+    ports:
+      - "8000:8000"
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      args:
-        VITE_BACKEND_URL: /api
-    image: queryfile-frontend
-    container_name: queryfile-frontend
-    restart: unless-stopped
+      context: ./frontend
+
+    container_name: ngdevops-frontend
+
+    ports:
+      - "5173:5173"
+
     depends_on:
       - backend
-    ports:
-      - "80:80"

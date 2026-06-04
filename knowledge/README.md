@@ -4,12 +4,12 @@ Welcome to your **Synced Brain** knowledge base. This folder is the single sourc
 
 ## How it works
 
-Any Markdown (`.md`) or PDF (`.pdf`) file you place here will be automatically ingested into Milvus every time you push to `main`. The system will:
+Any Markdown (`.md`) or PDF (`.pdf`) file you place here will be automatically ingested into the configured vector database (compatible with Milvus, e.g. Zilliz Cloud) every time you push to `main`. The system will:
 
 1. **Detect** whether the file is new, modified, or deleted using a SHA-256 content hash.
 2. **Chunk** the text into overlapping segments (800 chars, 100-char overlap).
 3. **Embed** each chunk with Cohere `embed-english-v3.0`.
-4. **Upsert** the vectors into Milvus with deterministic IDs so there are never duplicates.
+4. **Upsert** the vectors into the configured vector store (Milvus-compatible) with deterministic IDs so there are never duplicates.
 
 Deleted files are automatically removed from the vector store — no stale data, ever.
 
