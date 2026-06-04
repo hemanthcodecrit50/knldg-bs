@@ -23,3 +23,14 @@ services:
 
     depends_on:
       - backend
+
+  nginx:
+    build: ./nginx
+    container_name: ngdevops-nginx
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      - frontend
+      - backend
