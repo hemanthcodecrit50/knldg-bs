@@ -74,7 +74,6 @@ Thumbs.db
 backend/.env
 backend/knowledge/
 jenkins/
-Jenkinsfile
 report.md
 new_plan.md
 settings.json
