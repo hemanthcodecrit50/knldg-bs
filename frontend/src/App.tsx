@@ -82,6 +82,29 @@ function mapChatMessages(messages: ChatMessageItem[]): Message[] {
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [historySidebarCollapsed, setHistorySidebarCollapsed] = useState(() => {
+    return localStorage.getItem("synced-brain-history-collapsed") === "true";
+  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem("synced-brain-control-collapsed") === "true";
+  });
+
+  const toggleHistorySidebar = () => {
+    setHistorySidebarCollapsed((prev) => {
+      const newVal = !prev;
+      localStorage.setItem("synced-brain-history-collapsed", String(newVal));
+      return newVal;
+    });
+  };
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const newVal = !prev;
+      localStorage.setItem("synced-brain-control-collapsed", String(newVal));
+      return newVal;
+    });
+  };
+
   const [loading, setLoading] = useState(false);
   const [loadingChats, setLoadingChats] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -318,200 +341,98 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <aside className="history-sidebar">
-        <div className="sidebar-logo history-logo">
-          <span className="logo-icon">🧠</span>
-          <div>
-            <span className="logo-text">Synced Brain</span>
-            <p className="sidebar-subtitle">Conversation archive</p>
-          </div>
-        </div>
-
-        <div className="history-actions">
-          <button className="new-chat-btn" onClick={() => void handleNewChat()}>
-            + New chat
-          </button>
-          <p className="history-note">Select a previous thread or continue the active one.</p>
-        </div>
-
-        <div className="sidebar-status history-status">
-          <span className={`status-dot ${healthy === null ? "checking" : healthy ? "ok" : "err"}`} />
-          {healthy === null ? "Connecting…" : healthy ? "Backend online" : "Backend offline"}
-        </div>
-
-        <section className="chat-list-panel">
-          <div className="chat-list-header">
-            <span>Previous chats</span>
-            <span>{loadingChats ? "Loading…" : `${chatSummaries.length}`}</span>
+      <aside className={`history-sidebar ${historySidebarCollapsed ? "collapsed" : ""}`}>
+        <div className="history-sidebar-inner">
+          <div className="sidebar-logo history-logo">
+            <span className="logo-icon">🧠</span>
+            <div>
+              <span className="logo-text">Synced Brain</span>
+              <p className="sidebar-subtitle">Conversation archive</p>
+            </div>
           </div>
 
-          {chatError && <p className="chat-error-banner">{chatError}</p>}
-
-          <div className="chat-list">
-            {loadingChats && chatSummaries.length === 0 ? (
-              <p className="chat-list-empty">Loading conversations…</p>
-            ) : chatSummaries.length === 0 ? (
-              <p className="chat-list-empty">No saved chats yet.</p>
-            ) : (
-              chatSummaries.map((chat) => {
-                const preview = chat.last_message_preview ?? "Start typing to create the first message.";
-                return (
-                  <button
-                    key={chat.id}
-                    className={`chat-list-item ${chat.id === activeChatId ? "active" : ""}`}
-                    onClick={() => void loadChat(chat.id)}
-                  >
-                    <div className="chat-list-item-top">
-                      <span className="chat-list-title">{chat.title}</span>
-                      <span className="chat-list-count">{chat.message_count}</span>
-                    </div>
-                    <p className="chat-list-preview">{preview}</p>
-                    <span className="chat-list-time">{formatChatTime(chat.updated_at)}</span>
-                  </button>
-                );
-              })
-            )}
+          <div className="history-actions">
+            <button className="new-chat-btn" onClick={() => void handleNewChat()}>
+              + New chat
+            </button>
+            <p className="history-note">Select a previous thread or continue the active one.</p>
           </div>
-        </section>
-      </aside>
 
-      <aside className="sidebar">
-        <div className="sidebar-logo">
-          <span className="logo-icon">🧭</span>
-          <span className="logo-text">Control panel</span>
-        </div>
-
-        <div className="sidebar-status">
-          <span className={`status-dot ${healthy === null ? "checking" : healthy ? "ok" : "err"}`} />
-          {healthy === null ? "Connecting…" : healthy ? "Backend online" : "Backend offline"}
-        </div>
-
-        <section className="sidebar-section">
-          <label className="sidebar-label">Active chat</label>
-          <div className="active-chat-card">
-            <span className="active-chat-title">{activeChat?.title ?? activeChatTitle}</span>
-            <span className="active-chat-meta">{messages.length} messages</span>
+          <div className="sidebar-status history-status">
+            <span className={`status-dot ${healthy === null ? "checking" : healthy ? "ok" : "err"}`} />
+            {healthy === null ? "Connecting…" : healthy ? "Backend online" : "Backend offline"}
           </div>
-        </section>
 
-        <section className="sidebar-section">
-          <label className="sidebar-label">Results (top-k)</label>
-          <input
-            type="number"
-            min={1}
-            max={20}
-            value={topK}
-            onChange={(e) => setTopK(Number(e.target.value))}
-            className="sidebar-input"
-          />
-        </section>
-
-        <section className="sidebar-section">
-          <label className="sidebar-label">Filter: doc type</label>
-          <select
-            value={filterDocType}
-            onChange={(e) => setFilterDocType(e.target.value as "" | "md" | "pdf")}
-            className="sidebar-input"
-          >
-            <option value="">All</option>
-            <option value="md">Markdown</option>
-            <option value="pdf">PDF</option>
-          </select>
-        </section>
-
-        <section className="sidebar-section">
-          <label className="sidebar-label">Filter: path prefix</label>
-          <input
-            type="text"
-            placeholder="knowledge/ops/"
-            value={filterPrefix}
-            onChange={(e) => setFilterPrefix(e.target.value)}
-            className="sidebar-input"
-          />
-        </section>
-
-        <section className="sidebar-section">
-          <label className="sidebar-toggle">
-            <input
-              type="checkbox"
-              checked={debugMode}
-              onChange={(e) => setDebugMode(e.target.checked)}
-            />
-            <span>Debug scores</span>
-          </label>
-        </section>
-
-        <section className="sidebar-section">
-          <label className="sidebar-label">Upload to knowledge</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.txt,.pdf"
-            onChange={handleUploadChange}
-            className="hidden-file-input"
-          />
-          <button
-            className="sidebar-upload-btn"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? "Uploading..." : "Upload File"}
-          </button>
-
-          <div className="upload-files-block">
-            <div className="upload-files-header">
-              <span>Uploaded Files</span>
-              <button
-                className="upload-files-refresh"
-                onClick={() => void refreshUploads()}
-                disabled={uploadsLoading || uploading || !!deletingFilename}
-              >
-                {uploadsLoading ? "Loading..." : "Refresh"}
-              </button>
+          <section className="chat-list-panel">
+            <div className="chat-list-header">
+              <span>Previous chats</span>
+              <span>{loadingChats ? "Loading…" : `${chatSummaries.length}`}</span>
             </div>
 
-            {uploadsLoading ? (
-              <p className="upload-files-empty">Loading files...</p>
-            ) : uploadedFiles.length === 0 ? (
-              <p className="upload-files-empty">No uploaded files yet.</p>
-            ) : (
-              <ul className="upload-files-list">
-                {uploadedFiles.map((file) => (
-                  <li key={file.name} className="upload-file-item">
-                    <div className="upload-file-meta">
-                      <span className="upload-file-name" title={file.name}>{file.name}</span>
-                      <span className="upload-file-size">{Math.max(1, Math.round(file.size_bytes / 1024))} KB</span>
-                    </div>
+            {chatError && <p className="chat-error-banner">{chatError}</p>}
+
+            <div className="chat-list">
+              {loadingChats && chatSummaries.length === 0 ? (
+                <p className="chat-list-empty">Loading conversations…</p>
+              ) : chatSummaries.length === 0 ? (
+                <p className="chat-list-empty">No saved chats yet.</p>
+              ) : (
+                chatSummaries.map((chat) => {
+                  const preview = chat.last_message_preview ?? "Start typing to create the first message.";
+                  return (
                     <button
-                      className="upload-file-delete-btn"
-                      onClick={() => void handleDeleteUpload(file)}
-                      disabled={uploading || !!deletingFilename}
+                      key={chat.id}
+                      className={`chat-list-item ${chat.id === activeChatId ? "active" : ""}`}
+                      onClick={() => void loadChat(chat.id)}
                     >
-                      {deletingFilename === file.name ? "Deleting..." : "Delete"}
+                      <div className="chat-list-item-top">
+                        <span className="chat-list-title">{chat.title}</span>
+                        <span className="chat-list-count">{chat.message_count}</span>
+                      </div>
+                      <p className="chat-list-preview">{preview}</p>
+                      <span className="chat-list-time">{formatChatTime(chat.updated_at)}</span>
                     </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {uploadStatus && <p className="upload-status">{uploadStatus}</p>}
-        </section>
-
-        <div className="sidebar-footer">
-          <p>Uploads are saved as markdown in <code>knowledge/uploads/</code> and synced immediately.</p>
+                  );
+                })
+              )}
+            </div>
+          </section>
         </div>
       </aside>
 
       <main className="chat-area">
         <div className="chat-area-header">
-          <div>
-            <p className="chat-kicker">Conversation</p>
-            <h1>{activeChat?.title ?? activeChatTitle}</h1>
+          <div className="chat-area-header-left">
+            <button
+              className={`sidebar-toggle-btn left ${historySidebarCollapsed ? "collapsed" : ""}`}
+              onClick={toggleHistorySidebar}
+              title={historySidebarCollapsed ? "Expand history" : "Collapse history"}
+              aria-label="Toggle History Sidebar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+              </svg>
+            </button>
+            <div className="chat-title-group">
+              <p className="chat-kicker">Conversation</p>
+              <h1>{activeChat?.title ?? activeChatTitle}</h1>
+            </div>
           </div>
           <div className="chat-header-meta">
             <span>{messages.length} messages</span>
             {loadingMessages && <span>Loading thread…</span>}
+            <button
+              className={`sidebar-toggle-btn right ${sidebarCollapsed ? "collapsed" : ""}`}
+              onClick={toggleSidebar}
+              title={sidebarCollapsed ? "Expand control panel" : "Collapse control panel"}
+              aria-label="Toggle Control Panel Sidebar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="15" y1="3" x2="15" y2="21"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -574,6 +495,136 @@ export default function App() {
           </button>
         </div>
       </main>
+
+      <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <div className="sidebar-inner">
+          <div className="sidebar-logo">
+            <span className="logo-icon">🧭</span>
+            <span className="logo-text">Control panel</span>
+          </div>
+
+          <div className="sidebar-status">
+            <span className={`status-dot ${healthy === null ? "checking" : healthy ? "ok" : "err"}`} />
+            {healthy === null ? "Connecting…" : healthy ? "Backend online" : "Backend offline"}
+          </div>
+
+          <section className="sidebar-section">
+            <label className="sidebar-label">Active chat</label>
+            <div className="active-chat-card">
+              <span className="active-chat-title">{activeChat?.title ?? activeChatTitle}</span>
+              <span className="active-chat-meta">{messages.length} messages</span>
+            </div>
+          </section>
+
+          <section className="sidebar-section">
+            <label className="sidebar-label">Results (top-k)</label>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={topK}
+              onChange={(e) => setTopK(Number(e.target.value))}
+              className="sidebar-input"
+            />
+          </section>
+
+          <section className="sidebar-section">
+            <label className="sidebar-label">Filter: doc type</label>
+            <select
+              value={filterDocType}
+              onChange={(e) => setFilterDocType(e.target.value as "" | "md" | "pdf")}
+              className="sidebar-input"
+            >
+              <option value="">All</option>
+              <option value="md">Markdown</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </section>
+
+          <section className="sidebar-section">
+            <label className="sidebar-label">Filter: path prefix</label>
+            <input
+              type="text"
+              placeholder="knowledge/ops/"
+              value={filterPrefix}
+              onChange={(e) => setFilterPrefix(e.target.value)}
+              className="sidebar-input"
+            />
+          </section>
+
+          <section className="sidebar-section">
+            <label className="sidebar-toggle">
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+              />
+              <span>Debug scores</span>
+            </label>
+          </section>
+
+          <section className="sidebar-section">
+            <label className="sidebar-label">Upload to knowledge</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".md,.txt,.pdf"
+              onChange={handleUploadChange}
+              className="hidden-file-input"
+            />
+            <button
+              className="sidebar-upload-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? "Uploading..." : "Upload File"}
+            </button>
+
+            <div className="upload-files-block">
+              <div className="upload-files-header">
+                <span>Uploaded Files</span>
+                <button
+                  className="upload-files-refresh"
+                  onClick={() => void refreshUploads()}
+                  disabled={uploadsLoading || uploading || !!deletingFilename}
+                >
+                  {uploadsLoading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
+
+              {uploadsLoading ? (
+                <p className="upload-files-empty">Loading files...</p>
+              ) : uploadedFiles.length === 0 ? (
+                <p className="upload-files-empty">No uploaded files yet.</p>
+              ) : (
+                <ul className="upload-files-list">
+                  {uploadedFiles.map((file) => (
+                    <li key={file.name} className="upload-file-item">
+                      <div className="upload-file-meta">
+                        <span className="upload-file-name" title={file.name}>{file.name}</span>
+                        <span className="upload-file-size">{Math.max(1, Math.round(file.size_bytes / 1024))} KB</span>
+                      </div>
+                      <button
+                        className="upload-file-delete-btn"
+                        onClick={() => void handleDeleteUpload(file)}
+                        disabled={uploading || !!deletingFilename}
+                      >
+                        {deletingFilename === file.name ? "Deleting..." : "Delete"}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {uploadStatus && <p className="upload-status">{uploadStatus}</p>}
+          </section>
+
+          <div className="sidebar-footer">
+            <p>Uploads are saved as markdown in <code>knowledge/uploads/</code> and synced immediately.</p>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 

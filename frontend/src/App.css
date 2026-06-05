@@ -35,7 +35,24 @@ html, body, #root { height: 100%; font-family: var(--font); background: radial-g
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+}
+
+.history-sidebar.collapsed {
+  width: 0;
+  opacity: 0;
+  border-right-color: transparent;
+  pointer-events: none;
+}
+
+.history-sidebar-inner {
+  width: var(--history-sidebar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .history-logo {
@@ -180,12 +197,29 @@ html, body, #root { height: 100%; font-family: var(--font); background: radial-g
   width: var(--sidebar-w);
   flex-shrink: 0;
   background: var(--surface);
-  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 0;
   padding: 0;
+  overflow: hidden;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  opacity: 0;
+  border-left-color: transparent;
+  pointer-events: none;
+}
+
+.sidebar-inner {
+  width: var(--sidebar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .sidebar-logo {
@@ -420,13 +454,14 @@ html, body, #root { height: 100%; font-family: var(--font); background: radial-g
 
 .chat-area-header {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 22px clamp(16px, 5vw, 140px) 16px;
+  padding: 16px clamp(16px, 5vw, 140px);
   border-bottom: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.75));
   backdrop-filter: blur(10px);
+  min-height: 73px;
 }
 
 .chat-kicker {
@@ -654,3 +689,61 @@ html, body, #root { height: 100%; font-family: var(--font); background: radial-g
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+/* ── Sidebar Toggle Buttons ────────────────────────────────────────────────── */
+.sidebar-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--surface-2);
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 142, 247, 0.15);
+}
+
+.sidebar-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.sidebar-toggle-btn.collapsed {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.sidebar-toggle-btn.collapsed:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.sidebar-toggle-btn svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle-btn.collapsed svg {
+  transform: scale(0.9) rotate(180deg);
+}
+
+.chat-area-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chat-title-group {
+  display: flex;
+  flex-direction: column;
+}
