@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 from backend.app.chat_store import (
     append_message,
     create_chat,
+    delete_chat,
     get_chat,
     get_chat_detail,
     get_recent_messages,
@@ -252,6 +253,14 @@ def chat_detail(chat_id: str):
     if detail is None:
         raise HTTPException(status_code=404, detail="Chat not found.")
     return detail
+
+
+@app.delete("/chats/{chat_id}")
+def chat_delete(chat_id: str):
+    deleted = delete_chat(chat_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Chat not found.")
+    return {"status": "ok", "deleted": True}
 
 
 @app.post("/query", response_model=QueryResponse)

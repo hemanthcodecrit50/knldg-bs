@@ -177,6 +177,40 @@ html, body, #root { height: 100%; font-family: var(--font); background: radial-g
   flex-shrink: 0;
 }
 
+.chat-list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-list-item:hover .chat-delete-btn,
+.chat-list-item.active .chat-delete-btn {
+  opacity: 0.6;
+}
+
+.chat-list-item:hover .chat-delete-btn:hover,
+.chat-list-item.active .chat-delete-btn:hover {
+  opacity: 1;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+}
+
 .chat-list-preview {
   font-size: 0.75rem;
   color: var(--text-muted);

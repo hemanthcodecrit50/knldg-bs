@@ -178,3 +178,18 @@ export async function deleteUploadedKnowledgeFile(
 
   return res.json();
 }
+
+export async function deleteChat(chatId: string): Promise<{ status: string; deleted: boolean }> {
+  const encoded = encodeURIComponent(chatId);
+  const res = await fetch(`${BACKEND_URL}/chats/${encoded}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Delete chat failed (${res.status}): ${errText}`);
+  }
+
+  return res.json();
+}
+

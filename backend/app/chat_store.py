@@ -231,3 +231,10 @@ def get_chat_detail(chat_id: str) -> dict[str, Any] | None:
     if chat is None:
         return None
     return {"chat": chat, "messages": get_recent_messages(chat_id, limit=5000)}
+
+
+def delete_chat(chat_id: str) -> bool:
+    with _connect() as conn:
+        cursor = conn.execute("DELETE FROM chats WHERE id = ?", (chat_id,))
+        return cursor.rowcount > 0
+

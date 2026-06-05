@@ -30,3 +30,24 @@ def test_chat_store_round_trip(tmp_path, monkeypatch):
     assert len(detail["messages"]) == 2
     assert detail["messages"][0]["id"] == first_message["id"]
     assert detail["messages"][0]["role"] == "user"
+
+
+def test_delete_chat(tmp_path, monkeypatch):
+    db_path = tmp_path / "chat_history.sqlite3"
+    monkeypatch.setenv("CHAT_DB_PATH", str(db_path))
+
+    module = importlib.reload(chat_store)
+    module.initialize_database()
+
+    chat = module.create_chat()
+    module.append_message(chat["id"], "user", "Hello")
+
+    assert module.get_chat(chat["id"]) is not None
+    assert len(module.get_recent_messages(chat["id"])) == 1
+
+    deleted = module.delete_chat(chat["id"])
+    assert deleted is True
+
+    assert module.get_chat(chat["id"]) is None
+    assert len(module.get_recent_messages(chat["id"])) == 0
+
